@@ -9,6 +9,7 @@
 
 <body>
     <h1>目前時速: <span id="speed">0</span> km/h</h1>
+    <h1>校正時速: <span id="speed_2">0</span> km/h</h1>
     <p>目前座標: 緯度 <span id="latitude">0</span>, 經度 <span id="longitude">0</span></p>
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
     <p>時間差: <span id="timeDiff">0</span> 秒</p>
@@ -16,35 +17,80 @@
     <pre id="positionJson"></pre>
 
     <script>
+
+        let positions = [];
+        const SMOOTHING_WINDOW_SIZE = 5; // 移動平均窗口大小
+        const SPEED_THRESHOLD = 1; // 速度閾值 (km/h)
+
+        function calculateSpeed(position1, position2) {
+            const lat1 = position1.coords.latitude;
+            const lon1 = position1.coords.longitude;
+            const lat2 = position2.coords.latitude;
+            const lon2 = position2.coords.longitude;
+
+            const R = 6371; // 地球半徑 (km)
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c; // 距離 (km)
+            const timeDiff = (position2.timestamp - position1.timestamp) / 1000 / 3600; // 時間差 (小時)
+            return distance / timeDiff; // 速度 (km/h)
+        }
+
+        function smoothPosition(newPosition) {
+            positions.push(newPosition);
+            if (positions.length > SMOOTHING_WINDOW_SIZE) {
+                positions.shift();
+            }
+
+            const avgLat = positions.reduce((sum, pos) => sum + pos.coords.latitude, 0) / positions.length;
+            const avgLon = positions.reduce((sum, pos) => sum + pos.coords.longitude, 0) / positions.length;
+
+            return {
+                coords: {
+                    latitude: avgLat,
+                    longitude: avgLon,
+                    accuracy: newPosition.coords.accuracy
+                },
+                timestamp: newPosition.timestamp
+            };
+        }
+
+
         let lastPosition = null;
         let lastTime = null;
         let totalDistance = 0;
-        let wakeLock = null;
-
-        async function requestWakeLock() {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                wakeLock.addEventListener('release', () => {
-                    console.log('Screen Wake Lock released:', wakeLock.released);
-                });
-                console.log('Screen Wake Lock acquired:', wakeLock.released);
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-            }
-        }
 
         function getSpeedFromGPS(position) {
+            document.getElementById("positionJson").innerText = JSON.stringify(position, null, 2);
+            
             const { timestamp } = position;
-            const { latitude, longitude, speed } = position.coords;
+            const { latitude, longitude, speed, accuracy } = position.coords;
+
+            if (position.coords.accuracy > 50) { // 忽略精度過低的數據
+                return;
+            }
             const currentTime = timestamp;
 
-            document.getElementById("positionJson").innerText = JSON.stringify(position, null, 2);
+
+            const smoothedPosition = smoothPosition(position);
+            if (positions.length >= 2) {
+                const speed = calculateSpeed(positions[positions.length - 2], smoothedPosition);
+                if (speed >= SPEED_THRESHOLD) {
+                    document.getElementById("speed_2").innerText = speed.toFixed(2);
+                } else {
+                    console.log("Vehicle is stationary or speed is below threshold.");
+                }
+            }
 
             if (lastPosition) {
                 // 計算距離 (Haversine formula)
                 const distance = haversine(
                     lastPosition.latitude, lastPosition.longitude,
-                    latitude, longitude
+                    filteredLatitude, filteredLongitude
                 );
                 totalDistance += distance / 1000; // 轉換為公里
                 document.getElementById("distance").innerText = totalDistance.toFixed(2);
@@ -89,16 +135,6 @@
             alert("你的瀏覽器不支援 GPS 位置偵測！");
         }
 
-        if ('wakeLock' in navigator) {
-            requestWakeLock();
-            document.addEventListener('visibilitychange', () => {
-                if (wakeLock !== null && document.visibilityState === 'visible') {
-                    requestWakeLock();
-                }
-            });
-        } else {
-            console.warn('Wake Lock API not supported.');
-        }
     </script>
 </body>
 
