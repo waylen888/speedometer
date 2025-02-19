@@ -9,6 +9,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"
         integrity="sha512-XSmbX3mhrD2ix5fXPTRQb2FwK22sRMVQTpBP2ac8hX7Dh/605hA2QDegVWiAvZPiXIxOV0CbkmUjGionDpbCmw=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="canonical" href="https://waylen888.github.io/speedometer/" />
+    <link rel="manifest" href="/speedometer/manifest.webmanifest">
+
 </head>
 
 <body>
@@ -23,6 +27,16 @@
     <p>總里程: <span id="distance">0</span> 公里</p>
     <pre id="positionJson"></pre>
 
+
+    <script>
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.register (
+            '/speedometer/sw.js',
+            {scope: '/speedometer/'}
+          )
+        }
+    </script>
+
     <script>
         let lastPosition = null;
         let lastTime = null;
@@ -34,18 +48,19 @@
             const currentTime = timestamp;
             let speedKmh = 0;
             if (speed !== null) {
-                speedKmh = speed * 3.6;  
-            } 
-            $("#speed").text(speedKmh.toFixed(0));
+                speedKmh = speed * 3.6;
+            }
+
             $("#latitude").text(latitude.toFixed(6));
             $("#longitude").text(longitude.toFixed(6));
             $("#lastUpdate").text(new Date(currentTime).toLocaleTimeString());
             $("#positionJson").text(JSON.stringify(position, null, 2));
-            
+
             if (accuracy > 20) {
                 return;
             }
 
+            $("#speed").text(speedKmh.toFixed(0));
             if (lastPosition) {
                 // 計算距離 (Haversine formula)
                 const distance = haversine(
@@ -58,7 +73,7 @@
             if (lastTime) {
                 $("#timeDiff").text((currentTime - lastTime) / 1000);
             }
-            
+
             // 更新上一次的位置與時間
             lastPosition = { latitude, longitude };
             lastTime = currentTime;
