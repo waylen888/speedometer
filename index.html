@@ -8,6 +8,8 @@
 <body>
     <h1>目前時速: <span id="speed">0</span> km/h</h1>
     <p>目前座標: 緯度 <span id="latitude">0</span>, 經度 <span id="longitude">0</span></p>
+    <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
+    <p>時間差: <span id="timeDiff">0</span> 秒</p>
     <script>
         let lastPosition = null;
         let lastTime = null;
@@ -30,6 +32,7 @@
                     const speedKmh = (distance / timeDiff) * 3.6; // 轉換為 km/h
                     document.getElementById("speed").innerText = speedKmh.toFixed(2);
                 }
+                document.getElementById("timeDiff").innerText = timeDiff.toFixed(2);
             }
 
             // 更新上一次的位置與時間
@@ -37,6 +40,7 @@
             lastTime = currentTime;
             document.getElementById("latitude").innerText = latitude.toFixed(6);
             document.getElementById("longitude").innerText = longitude.toFixed(6);
+            document.getElementById("lastUpdate").innerText = new Date(currentTime).toLocaleTimeString();
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
