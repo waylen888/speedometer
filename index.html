@@ -10,6 +10,7 @@
 <body>
     <h1>目前時速: <span id="speed">0</span> km/h</h1>
     <h1>校正時速: <span id="speed_2">0</span> km/h</h1>
+    <p>裝置狀態: <span id="deviceStatus"></span></p>
     <p>目前座標: 緯度 <span id="latitude">0</span>, 經度 <span id="longitude">0</span></p>
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
     <p>時間差: <span id="timeDiff">0</span> 秒</p>
@@ -21,6 +22,7 @@
         let positions = [];
         const SMOOTHING_WINDOW_SIZE = 5; // 移動平均窗口大小
         const SPEED_THRESHOLD = 1; // 速度閾值 (km/h)
+        const ACCELERATION_THRESHOLD = 0.5; // 加速度閾值 (m/s²)
 
         function calculateSpeed(position1, position2) {
             const lat1 = position1.coords.latitude;
@@ -66,7 +68,7 @@
 
         function getSpeedFromGPS(position) {
             document.getElementById("positionJson").innerText = JSON.stringify(position, null, 2);
-            
+
             const { timestamp } = position;
             const { latitude, longitude, speed, accuracy } = position.coords;
 
@@ -134,6 +136,24 @@
         } else {
             alert("你的瀏覽器不支援 GPS 位置偵測！");
         }
+
+
+        // 加速度計監聽
+        if (window.DeviceMotionEvent) {
+            window.addEventListener('devicemotion', (event) => {
+                const acceleration = event.accelerationIncludingGravity; // 含重力的加速度 (m/s²)
+                if (Math.abs(acceleration.x) > ACCELERATION_THRESHOLD ||
+                    Math.abs(acceleration.y) > ACCELERATION_THRESHOLD ||
+                    Math.abs(acceleration.z) > ACCELERATION_THRESHOLD) {
+                    document.getElementById("deviceStatus").innerText = "移動中";
+                } else {
+                    document.getElementById("deviceStatus").innerText = "靜止中";
+                }
+            });
+        } else {
+            console.log("Device Motion API is not supported.");
+        }
+
 
     </script>
 </body>
