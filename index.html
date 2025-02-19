@@ -12,8 +12,8 @@
     <p>裝置狀態: <span id="deviceStatus"></span> <span id="deviceAccelerationMagnitude"></span> </p>
     <p>目前座標: 緯度 <span id="latitude">-</span>, 經度 <span id="longitude">-</span></p>
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
-    <p>時間差: <span id="timeDiff">-</span> 秒</p>
-    <p>總里程: <span id="distance">-</span> 公里</p>
+    <p>時間差: <span id="timeDiff">0</span> 秒</p>
+    <p>總里程: <span id="distance">0</span> 公里</p>
     <pre id="positionJson"></pre>
 
     <script>
@@ -28,9 +28,9 @@
             const { latitude, longitude, speed, accuracy } = position.coords;
             const currentTime = timestamp;
 
-            if (accuracy > 20) { // 忽略精度過低的數據
-                return;
-            }
+            // if (accuracy > 20) { // 忽略精度過低的數據
+            //     return;
+            // }
 
             document.getElementById("latitude").innerText = latitude.toFixed(6);
             document.getElementById("longitude").innerText = longitude.toFixed(6);
