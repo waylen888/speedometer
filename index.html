@@ -67,7 +67,6 @@
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(getSpeedFromGPS, console.error, {
                 enableHighAccuracy: true,  // 使用高精度 GPS
-                maximumAge: 1000,          // 最多緩存 1 秒
                 timeout: 5000              // 5 秒內沒獲取到 GPS 會超時
             });
         } else {
