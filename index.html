@@ -24,7 +24,7 @@
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
     <p>時間差: <span id="timeDiff">0</span> 秒</p>
     <p>總里程: <span id="distance">0</span> 公里</p>
-    <p>測速資料:
+    <p>測速資料(<span id="countOfPoints">0</span>):
     <pre id="speedLimit"></pre>
     </p>
     <pre id="positionJson"></pre>
@@ -63,6 +63,7 @@
                         return null;
                     }
                 }).filter(function (record) { return record !== null });
+                $("#countOfPoints").text(records.length);
                 rbtree = new RBush(16).fromJSON(records);
             }
         });
@@ -80,7 +81,7 @@
             $("#longitude").text(longitude.toFixed(6));
             $("#lastUpdate").text(new Date(currentTime).toLocaleTimeString());
             $("#positionJson").text(JSON.stringify(position, null, 2));
-            
+
             if (rbtree !== null) {
                 // 查詢 500 公尺內的點
                 const range = 0.005; // 大約 500 公尺
