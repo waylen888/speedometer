@@ -26,11 +26,20 @@
 
             const { timestamp } = position;
             const { latitude, longitude, speed, accuracy } = position.coords;
+            const currentTime = timestamp;
 
             if (accuracy > 20) { // 忽略精度過低的數據
                 return;
             }
-            const currentTime = timestamp;
+
+            document.getElementById("latitude").innerText = latitude.toFixed(6);
+            document.getElementById("longitude").innerText = longitude.toFixed(6);
+            document.getElementById("lastUpdate").innerText = new Date(currentTime).toLocaleTimeString();
+
+            if (lastTime) {
+                document.getElementById("timeDiff").innerText = (currentTime - lastTime) / 1000;
+            }
+            lastTime = currentTime;
 
             if (lastPosition) {
                 // 計算距離 (Haversine formula)
@@ -41,19 +50,13 @@
                 totalDistance += distance / 1000; // 轉換為公里
                 document.getElementById("distance").innerText = totalDistance.toFixed(2);
             }
+            // 更新上一次的位置與時間
+            lastPosition = { latitude, longitude };
 
             if (speed !== null) {
                 const speedKmh = speed * 3.6;
                 document.getElementById("speed").innerText = speedKmh.toFixed(2);
-                document.getElementById("timeDiff").innerText = (currentTime - lastTime) / 1000;
             }
-
-            // 更新上一次的位置與時間
-            lastPosition = { latitude, longitude };
-            lastTime = currentTime;
-            document.getElementById("latitude").innerText = latitude.toFixed(6);
-            document.getElementById("longitude").innerText = longitude.toFixed(6);
-            document.getElementById("lastUpdate").innerText = new Date(currentTime).toLocaleTimeString();
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
