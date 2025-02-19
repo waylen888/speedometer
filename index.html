@@ -10,7 +10,7 @@
 <body>
     <h1>目前時速: <span id="speed">0</span> km/h</h1>
     <h1>校正時速: <span id="speed_2">0</span> km/h</h1>
-    <p>裝置狀態: <span id="deviceStatus"></span></p>
+    <p>裝置狀態: <span id="deviceStatus"></span> <span id="deviceAccelerationMagnitude"></span> </p>
     <p>目前座標: 緯度 <span id="latitude">0</span>, 經度 <span id="longitude">0</span></p>
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
     <p>時間差: <span id="timeDiff">0</span> 秒</p>
@@ -24,44 +24,6 @@
         const SPEED_THRESHOLD = 1; // 速度閾值 (km/h)
         const ACCELERATION_THRESHOLD = 0.5; // 加速度閾值 (m/s²)
 
-        function calculateSpeed(position1, position2) {
-            const lat1 = position1.coords.latitude;
-            const lon1 = position1.coords.longitude;
-            const lat2 = position2.coords.latitude;
-            const lon2 = position2.coords.longitude;
-
-            const R = 6371; // 地球半徑 (km)
-            const dLat = (lat2 - lat1) * (Math.PI / 180);
-            const dLon = (lon2 - lon1) * (Math.PI / 180);
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = R * c; // 距離 (km)
-            const timeDiff = (position2.timestamp - position1.timestamp) / 1000 / 3600; // 時間差 (小時)
-            return distance / timeDiff; // 速度 (km/h)
-        }
-
-        function smoothPosition(newPosition) {
-            positions.push(newPosition);
-            if (positions.length > SMOOTHING_WINDOW_SIZE) {
-                positions.shift();
-            }
-
-            const avgLat = positions.reduce((sum, pos) => sum + pos.coords.latitude, 0) / positions.length;
-            const avgLon = positions.reduce((sum, pos) => sum + pos.coords.longitude, 0) / positions.length;
-
-            return {
-                coords: {
-                    latitude: avgLat,
-                    longitude: avgLon,
-                    accuracy: newPosition.coords.accuracy
-                },
-                timestamp: newPosition.timestamp
-            };
-        }
-
-
         let lastPosition = null;
         let lastTime = null;
         let totalDistance = 0;
@@ -72,7 +34,7 @@
             const { timestamp } = position;
             const { latitude, longitude, speed, accuracy } = position.coords;
 
-            if (position.coords.accuracy > 50) { // 忽略精度過低的數據
+            if (position.coords.accuracy > 10) { // 忽略精度過低的數據
                 return;
             }
             const currentTime = timestamp;
@@ -137,22 +99,33 @@
             alert("你的瀏覽器不支援 GPS 位置偵測！");
         }
 
+        let lastAcceleration = { x: 0, y: 0, z: 0 };
 
-        // 加速度計監聽
-        if (window.DeviceMotionEvent) {
-            window.addEventListener('devicemotion', (event) => {
-                const acceleration = event.accelerationIncludingGravity; // 含重力的加速度 (m/s²)
-                if (Math.abs(acceleration.x) > ACCELERATION_THRESHOLD ||
-                    Math.abs(acceleration.y) > ACCELERATION_THRESHOLD ||
-                    Math.abs(acceleration.z) > ACCELERATION_THRESHOLD) {
-                    document.getElementById("deviceStatus").innerText = "移動中";
-                } else {
-                    document.getElementById("deviceStatus").innerText = "靜止中";
-                }
-            });
-        } else {
-            console.log("Device Motion API is not supported.");
-        }
+        // 處理 devicemotion 事件
+        window.addEventListener('devicemotion', function (event) {
+            const acceleration = event.acceleration;  // 取得加速度數據
+            const rotationRate = event.rotationRate;  // 取得角速度數據
+
+            // 計算加速度的總和（你可以根據需要做更進一步的處理）
+            const accelerationMagnitude = Math.sqrt(
+                acceleration.x * acceleration.x +
+                acceleration.y * acceleration.y +
+                acceleration.z * acceleration.z
+            );
+
+            document.getElementById("deviceAccelerationMagnitude").innerText = accelerationMagnitude;
+
+            // 比較是否有顯著的移動，並根據此調整定位邏輯
+            if (accelerationMagnitude > 5) {
+                document.getElementById("deviceStatus").innerText = "移動";
+                // 這裡可以根據加速度來修正位置，這裡簡單範例不進行實際修正
+            } else {
+                document.getElementById("deviceStatus").innerText = "停止";
+            }
+
+            // 儲存加速度數據供下一次使用
+            lastAcceleration = acceleration;
+        });
 
 
     </script>
