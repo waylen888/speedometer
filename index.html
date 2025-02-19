@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>目前時速: <span id="speed">0</span> km/h</h1>
-
+    <p>目前座標: 緯度 <span id="latitude">0</span>, 經度 <span id="longitude">0</span></p>
     <script>
         let lastPosition = null;
         let lastTime = null;
@@ -35,6 +35,8 @@
             // 更新上一次的位置與時間
             lastPosition = { latitude, longitude };
             lastTime = currentTime;
+            document.getElementById("latitude").innerText = latitude.toFixed(6);
+            document.getElementById("longitude").innerText = longitude.toFixed(6);
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
