@@ -27,10 +27,10 @@
 
     <script>
         if (navigator.serviceWorker) {
-          navigator.serviceWorker.register (
-            '/speedometer/sw.js',
-            {scope: '/speedometer/'}
-          )
+            navigator.serviceWorker.register(
+                '/sw.js',
+                { scope: '/' }
+            )
         }
     </script>
 
@@ -54,6 +54,7 @@
             $("#positionJson").text(JSON.stringify(position, null, 2));
 
             if (accuracy > 20) {
+                $("#speed").text(0);
                 return;
             }
 

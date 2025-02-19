@@ -2,14 +2,14 @@
   "name": "Github Page PWA",
   "short_name": "GPPWA",
   "description": "Github Page as a Progressive Web App",
-  "scope": "/speedometer/",
-  "start_url": "/speedometer/",
+  "scope": "/",
+  "start_url": "/",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "display": "standalone", 
   "icons": [
       {
-        "src": "/speedometer/img/icon.png",
+        "src": "/img/icon.png",
         "type": "image/png",
         "sizes": "700x700"
       }
