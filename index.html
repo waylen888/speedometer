@@ -23,21 +23,15 @@
 
             document.getElementById("positionJson").innerText = JSON.stringify(position, null, 2);
             
-            if (lastPosition) {
+            if (speed) {
                 // 計算距離 (Haversine formula)
                 const distance = haversine(
                     lastPosition.latitude, lastPosition.longitude,
                     latitude, longitude
                 );
-
-                // 計算時間差（秒）
-                const timeDiff = (currentTime - lastTime) / 1000;
-
-                if (timeDiff > 0) {
-                    const speedKmh = (distance / timeDiff) * 3.6; // 轉換為 km/h
-                    document.getElementById("speed").innerText = speedKmh.toFixed(2);
-                }
-                document.getElementById("timeDiff").innerText = timeDiff.toFixed(2);
+                const speedKmh = speed * 3.6;
+                document.getElementById("speed").innerText = speedKmh.toFixed(2);
+                document.getElementById("timeDiff").innerText = (currentTime - lastTime) / 1000;
             }
 
             // 更新上一次的位置與時間
