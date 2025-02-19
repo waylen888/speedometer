@@ -6,11 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPS 時速測試</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.6.0/echarts.min.js"
+        integrity="sha512-XSmbX3mhrD2ix5fXPTRQb2FwK22sRMVQTpBP2ac8hX7Dh/605hA2QDegVWiAvZPiXIxOV0CbkmUjGionDpbCmw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
-    <h1>目前時速: <span id="speed">-</span> km/h</h1>
+    <div style="text-align: center;">
+        <div id="speed" style="font-size: 10em">0</div>
+        <div>km/h</div>
+    </div>
     <p>裝置狀態: <span id="deviceStatus"></span> <span id="deviceAccelerationMagnitude"></span> </p>
     <p>目前座標: 緯度 <span id="latitude">-</span>, 經度 <span id="longitude">-</span></p>
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
@@ -33,17 +38,17 @@
 
             if (speed !== null && accuracy < 20) {
                 const speedKmh = speed * 3.6;
-                $("#speed").text(speedKmh.toFixed(2));
+                $("#speed").text(speedKmh.toFixed(0));
             } else {
                 $("#speed").text("0");
-                return 
+                return
             }
 
-            
+
             $("#latitude").text(latitude.toFixed(6));
             $("#longitude").text(longitude.toFixed(6));
             $("#lastUpdate").text(new Date(currentTime).toLocaleTimeString());
-            
+
             if (lastTime) {
                 $("#timeDiff").text((currentTime - lastTime) / 1000);
             }
@@ -61,7 +66,7 @@
             // 更新上一次的位置與時間
             lastPosition = { latitude, longitude };
 
-            
+
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
@@ -91,35 +96,42 @@
 
         let lastAcceleration = { x: 0, y: 0, z: 0 };
 
-        if (!window.DeviceMotionEvent) {
-            document.getElementById("deviceStatus").innerText = "你的裝置不支援 DeviceMotionEvent";
-        } else {
-            // 處理 devicemotion 事件
-            window.addEventListener('devicemotion', function (event) {
-                const acceleration = event.acceleration;  // 取得加速度數據
-                const rotationRate = event.rotationRate;  // 取得角速度數據
+        $().ready(function () {
+            if (!window.DeviceMotionEvent) {
+                $("#deviceStatus").text("你的裝置不支援 DeviceMotionEvent");
+            } else {
+                // 處理 devicemotion 事件
+                window.addEventListener('devicemotion', function (event) {
+                    try {
+                        const acceleration = event.acceleration;  // 取得加速度數據
+                        const rotationRate = event.rotationRate;  // 取得角速度數據
 
-                // 計算加速度的總和（你可以根據需要做更進一步的處理）
-                const accelerationMagnitude = Math.sqrt(
-                    acceleration.x * acceleration.x +
-                    acceleration.y * acceleration.y +
-                    acceleration.z * acceleration.z
-                );
+                        // 計算加速度的總和（你可以根據需要做更進一步的處理）
+                        const accelerationMagnitude = Math.sqrt(
+                            acceleration.x * acceleration.x +
+                            acceleration.y * acceleration.y +
+                            acceleration.z * acceleration.z
+                        );
 
-                document.getElementById("deviceAccelerationMagnitude").innerText = accelerationMagnitude;
+                        $("#deviceAccelerationMagnitude").text(accelerationMagnitude);
 
-                // 比較是否有顯著的移動，並根據此調整定位邏輯
-                if (accelerationMagnitude > 5) {
-                    document.getElementById("deviceStatus").innerText = "移動";
-                    // 這裡可以根據加速度來修正位置，這裡簡單範例不進行實際修正
-                } else {
-                    document.getElementById("deviceStatus").innerText = "停止";
-                }
+                        // 比較是否有顯著的移動，並根據此調整定位邏輯
+                        if (accelerationMagnitude > 5) {
+                            document.getElementById("deviceStatus").innerText = "移動";
+                            // 這裡可以根據加速度來修正位置，這裡簡單範例不進行實際修正
+                        } else {
+                            document.getElementById("deviceStatus").innerText = "停止";
+                        }
 
-                // 儲存加速度數據供下一次使用
-                lastAcceleration = acceleration;
-            });
-        }
+                        // 儲存加速度數據供下一次使用
+                        lastAcceleration = acceleration;
+                    } catch (error) {
+                        $("#deviceStatus").text("裝置加速度感應器錯誤");
+                    }
+                });
+            }
+
+        });
 
     </script>
 </body>
