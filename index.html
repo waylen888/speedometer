@@ -8,6 +8,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="canonical" href="https://waylen888.github.io/speedometer/" />
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/rbush"></script>
+
 </head>
 
 <body>
@@ -22,6 +24,9 @@
     <p>最後更新時間: <span id="lastUpdate">未更新</span></p>
     <p>時間差: <span id="timeDiff">0</span> 秒</p>
     <p>總里程: <span id="distance">0</span> 公里</p>
+    <p>測速資料:
+    <pre id="speedLimit"></pre>
+    </p>
     <pre id="positionJson"></pre>
 
 
@@ -40,6 +45,27 @@
         let lastPosition = null;
         let lastTime = null;
         let totalDistance = 0;
+        let rbtree = null;
+        $.ajax({
+            url: "/data/speed-limit.json",
+            success: function (data) {
+                const records = data.result.records.map(function (record) {
+                    try {
+                        return {
+                            maxX: parseFloat(record.Longitude),
+                            maxY: parseFloat(record.Latitude),
+                            minX: parseFloat(record.Longitude),
+                            minY: parseFloat(record.Latitude),
+                            limit: parseInt(record.limit),
+                        };
+                    } catch (error) {
+                        console.error(error);
+                        return null;
+                    }
+                }).filter(function (record) { return record !== null });
+                rbtree = new RBush(16).fromJSON(records);
+            }
+        });
 
         function getSpeedFromGPS(position) {
             const { timestamp } = position;
@@ -54,6 +80,19 @@
             $("#longitude").text(longitude.toFixed(6));
             $("#lastUpdate").text(new Date(currentTime).toLocaleTimeString());
             $("#positionJson").text(JSON.stringify(position, null, 2));
+            
+            if (rbtree !== null) {
+                // 查詢 500 公尺內的點
+                const range = 0.005; // 大約 500 公尺
+                const results = rbtree.search({
+                    minX: longitude - range,
+                    minY: latitude - range,
+                    maxX: longitude + range,
+                    maxY: latitude + range
+                });
+                console.log(results, rbtree);
+                $("#speedLimit").text(JSON.stringify(results, null, 2));
+            }
 
             if (accuracy > 20) {
                 $("#speed").text(0);
@@ -77,6 +116,8 @@
             // 更新上一次的位置與時間
             lastPosition = { latitude, longitude };
             lastTime = currentTime;
+
+            
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
