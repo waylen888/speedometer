@@ -47,7 +47,7 @@
         let totalDistance = 0;
         let rbtree = null;
         $.ajax({
-            url: "/data/speed-limit.json",
+            url: "/speedometer/data/speed-limit.json",
             success: function (data) {
                 const records = data.result.records.map(function (record) {
                     try {
