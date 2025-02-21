@@ -117,7 +117,7 @@
                 // 計算距離 (Haversine formula)
                 const distance = haversine(
                     lastPosition.latitude, lastPosition.longitude,
-                    filteredLatitude, filteredLongitude
+                    latitude, longitude
                 );
                 totalDistance += distance / 1000; // 轉換為公里
                 $("#distance").text(totalDistance.toFixed(2));
