@@ -13,6 +13,11 @@
 </head>
 
 <body>
+    <video id="keepAwakeVideo" playsinline loop muted>
+        <source
+            src="data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAGlzb21pc28yYXZjMW1wNDFtcDQyAAACAG1vb3YAAABsbXZoZAAAAAB8AABMAwAAADwAAABwbWQAAAAA..."
+            type="video/mp4">
+    </video>
     <div style="text-align: center;">
         <div id="speed" style="font-size: 10em; font-weight: bold;">
             0
@@ -26,9 +31,16 @@
     <p>總里程: <span id="distance">0</span> 公里</p>
     <p>測速資料(<span id="countOfPoints">0</span>):
     <pre id="speedLimit"></pre>
+    <button onclick="keepScreenAwake()">保持螢幕亮起</button>
+
     </p>
     <pre id="positionJson"></pre>
-
+    <script>
+        function keepScreenAwake() {
+            const video = document.getElementById("keepAwakeVideo");
+            video.play().catch((err) => console.error("影片播放失敗:", err));
+        }
+    </script>
 
     <script>
         if (navigator.serviceWorker) {
@@ -118,7 +130,7 @@
             lastPosition = { latitude, longitude };
             lastTime = currentTime;
 
-            
+
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
